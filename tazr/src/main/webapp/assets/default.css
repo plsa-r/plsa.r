@@ -1,0 +1,5 @@
+html, body,
+div, span, p, ul, li, a{
+    font-family: Arial;
+}
+.notify{padding:3px 4px;border:solid 1px #000;}

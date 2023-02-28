@@ -1,0 +1,13 @@
+<html>
+<head>
+    <title>TAZR : Activity List</title>
+    <link rel="stylesheet" href="assets/default.css"/>
+</head>
+<body>
+
+    <div class="content">
+        <stargzr:content/>
+    </div>
+
+</body>
+</html>

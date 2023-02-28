@@ -1,0 +1,16 @@
+<h1>TAZR</h1>
+<p>Activity List</p>
+<a:if spec="${message != ''}">
+    <p class="notify">${message}</p>
+</a:if>
+
+<form action="/save" method="post">
+    <input type="text" name="description" placeholder="read depressing self help book."/>
+    <input type="submit" value="Add +" class="button"/>
+</form>
+
+<ul>
+    <a:foreach items="${activities}" var="item">
+        <li>${item.description}</li>
+    </a:foreach>
+</ul>

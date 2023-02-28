@@ -1,0 +1,127 @@
+plugins {
+    id "com.github.johnrengelman.shadow" version "7.1.2"
+    id "maven-publish"
+    id "java-library"
+    id "signing"
+    id "java"
+    id "jacoco"
+}
+
+group "net.plsar"
+version "1.80.0"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "com.h2database:h2:2.1.210"
+    testImplementation "org.jacoco:org.jacoco.core:0.8.7"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.8.2"
+    testImplementation "org.junit.jupiter:junit-jupiter-engine:5.8.2"
+}
+
+jacoco {
+    toolVersion = "0.8.7"
+}
+
+task javadocJar(type: Jar) {
+    from javadoc
+    classifier = "javadoc"
+}
+
+task sourcesJar(type:Jar){
+    dependsOn(JavaPlugin.CLASSES_TASK_NAME)
+    classifier = "sources"
+    from(sourceSets["main"].allSource)
+    artifacts {
+        add("archives", sourcesJar)
+    }
+}
+
+task artifact{
+    dependsOn(build)
+    dependsOn(sourcesJar)
+    dependsOn(javadocJar)
+}
+
+task coverage{
+    description = "Runs the unit tests with coverage"
+    dependsOn "test"
+    dependsOn "jacocoTestReport"
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+    }
+}
+
+shadowJar {
+    archiveBaseName.set("plsar")
+    archiveClassifier.set("")
+    archiveVersion.set(project.version)
+    dependencies {
+        exclude(dependency("org.jacoco:org.jacoco.core:0.8.7"))
+        exclude(dependency("org.junit.jupiter:junit-jupiter-api:5.8.2"))
+        exclude(dependency("org.junit.jupiter:junit-jupiter-engine:5.8.2"))
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "sonatype"
+            setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            credentials {
+                username = findProperty("ossh.user")
+                password = findProperty("ossh.pass")
+            }
+        }
+    }
+    publications {
+        binaryAndSources(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+        }
+        maven(MavenPublication) {
+            groupId = "net.plsar"
+            artifactId = "plsar"
+            version = project.version
+            pom {
+                name = "PLSA.R"
+                description = "PLSA.R is an Open Source Server + " +
+                        "Framework API runnable via command line. www.plsar.net"
+                url = "http://www.plsar.net"
+                licenses {
+                    license {
+                        name = "MIT"
+                        url = "https://opensource.org/licenses/MIT"
+                    }
+                }
+                developers {
+                    developer {
+                        id = "mcroteau"
+                        name = "Mike Croteau"
+                        email = "mike@ae0n.net"
+                    }
+                }
+                scm {
+                    connection = "scm:git:git://github.com/plsa-r/plsa.r.git"
+                    developerConnection = "scm:git:ssh://github.com/plsa-r/plsa.r.git"
+                    url = "https://github.com/plsa-r/plsa.r"
+                }
+            }
+        }
+    }
+}
+
+signing {
+    def id = findProperty("gpg.id")
+    def key = findProperty("gpg.key")
+    def pass = findProperty("gpg.pass")
+    useInMemoryPgpKeys(id, key, pass)
+    sign(publishing.publications)
+}

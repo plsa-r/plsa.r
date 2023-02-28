@@ -1,0 +1,19 @@
+plugins {
+    id 'java-library'
+}
+
+group 'io.cosmic'
+version '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+task run(type: JavaExec) {
+    mainClass = "foo.bar.Launcher"
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+dependencies {
+    implementation project(':plsar')
+}
