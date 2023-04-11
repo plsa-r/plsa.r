@@ -92,7 +92,7 @@ public class PLSAR {
 
             Log.info("Ready!");
 
-        }catch(IOException | NoSuchMethodException | InvocationTargetException | IllegalAccessException | InstantiationException | StargzrException ex){
+        }catch(IOException | NoSuchMethodException | InvocationTargetException | IllegalAccessException | InstantiationException | PlsarException ex){
             ex.printStackTrace();
         }
     }

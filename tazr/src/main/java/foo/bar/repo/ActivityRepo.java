@@ -45,11 +45,12 @@ public class ActivityRepo {
         return activities;
     }
 
-    public void save(Activity activity) {
+    public int save(Activity activity) {
         String sql = "insert into activities (description) values ('[+]')";
-        dao.save(sql, new Object[]{
+        int id = dao.save(sql, new Object[]{
                 activity.getDescription()
         });
+        return id;
     }
 
     public void update(Activity activity) {

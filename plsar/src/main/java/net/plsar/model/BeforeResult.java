@@ -2,9 +2,13 @@ package net.plsar.model;
 
 public class BeforeResult {
     public BeforeResult(String redirectUri) {
+        this.message = "";
         this.redirectUri = redirectUri;
     }
-    public BeforeResult(){}
+    public BeforeResult(){
+        this.message = "";
+        this.redirectUri = "";
+    }
 
     String redirectUri;
     String message;

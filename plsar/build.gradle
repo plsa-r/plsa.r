@@ -8,7 +8,7 @@ plugins {
 }
 
 group "net.plsar"
-version "1.80.0"
+version "2.0.0"
 
 repositories {
     mavenCentral()
@@ -92,8 +92,13 @@ publishing {
             version = project.version
             pom {
                 name = "PLSA.R"
-                description = "PLSA.R is an Open Source Server + " +
-                        "Framework API runnable via command line. www.plsar.net"
+                description = "PLSA.R is an Open Source Java Server + API for high demand, " +
+                        "low latency requirements. There are no static references, no file reads, " +
+                        "access to static fields per request. Everything is either cached and or " +
+                        "instantiated on the fly. PLSA.R runs via one command so there are no .war " +
+                        "files to deploy, no additional plugins to install it is a simple yet " +
+                        "powerful alternative to container deployment environments. PLSA.R even " +
+                        "boasts a little dependency injection for data logic. www.plsar.net"
                 url = "http://www.plsar.net"
                 licenses {
                     license {

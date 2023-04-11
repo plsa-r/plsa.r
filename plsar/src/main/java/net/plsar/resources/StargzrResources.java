@@ -1,10 +1,9 @@
 package net.plsar.resources;
 
-import net.plsar.StargzrException;
+import net.plsar.PlsarException;
 import net.plsar.ViewConfig;
 
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -118,7 +117,7 @@ public class StargzrResources {
         return null;
     }
 
-    public ConcurrentMap<String, byte[]> getViewBytesMap(ViewConfig viewConfig) throws StargzrException, FileNotFoundException {
+    public ConcurrentMap<String, byte[]> getViewBytesMap(ViewConfig viewConfig) throws PlsarException, FileNotFoundException {
         ConcurrentMap<String, byte[]> viewFilesBytesMap = new ConcurrentHashMap<>();
 
         Path viewsPath = Paths.get("src", "main", viewConfig.getViewsPath());

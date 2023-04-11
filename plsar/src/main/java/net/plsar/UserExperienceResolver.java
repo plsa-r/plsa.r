@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ExperienceManager {
+public class UserExperienceResolver {
 
     final Integer ZERO = 0;
     final Integer ONE  = 1;
@@ -29,8 +29,7 @@ public class ExperienceManager {
     final String COMMENT      = "<%--";
     final String HTML_COMMENT = "<!--";
 
-    //todo: please.
-    public String execute(String pageElement, ViewCache viewCache, NetworkRequest req, SecurityAttributes securityAttributes, List<Class<?>> viewRenderers) throws StargzrException, NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
+    public String resolve(String pageElement, ViewCache viewCache, NetworkRequest req, SecurityAttributes securityAttributes, List<Class<?>> viewRenderers) throws PlsarException, NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
         List<String> elementEntries = Arrays.asList(pageElement.split("\n"));
         List<String> viewRendererElementEntries = getInterpretedRenderers(req, securityAttributes, elementEntries, viewRenderers);
 
@@ -157,7 +156,7 @@ public class ExperienceManager {
         return elementEntries;
     }
 
-    List<DataPartial> getCompletedPartials(List<DataPartial> dataPartialsPre, ViewCache resp) throws InvocationTargetException, NoSuchMethodException, StargzrException, NoSuchFieldException, IllegalAccessException {
+    List<DataPartial> getCompletedPartials(List<DataPartial> dataPartialsPre, ViewCache resp) throws InvocationTargetException, NoSuchMethodException, PlsarException, NoSuchFieldException, IllegalAccessException {
 
         List<DataPartial> dataPartials = new ArrayList<>();
         for(DataPartial dataPartial : dataPartialsPre) {
@@ -303,7 +302,7 @@ public class ExperienceManager {
     }
 
 
-    List<DataPartial> getInflatedPartials(List<DataPartial> dataPartials, ViewCache resp) throws NoSuchFieldException, IllegalAccessException, StargzrException, InvocationTargetException, NoSuchMethodException {
+    List<DataPartial> getInflatedPartials(List<DataPartial> dataPartials, ViewCache resp) throws NoSuchFieldException, IllegalAccessException, PlsarException, InvocationTargetException, NoSuchMethodException {
 
         List<ObjectComponent> activeObjectComponents = new ArrayList();
         List<DataPartial> dataPartialsPre = new ArrayList<>();
@@ -466,7 +465,7 @@ public class ExperienceManager {
         return specPartialsReady;
     }
 
-    List<DataPartial> getIterablePartials(int openIdx, List<DataPartial> dataPartials) throws StargzrException {
+    List<DataPartial> getIterablePartials(int openIdx, List<DataPartial> dataPartials) throws PlsarException {
         Integer openCount = 1, endCount = 0;
         List<DataPartial> dataPartialsDeux = new ArrayList<>();
         for (int foo = openIdx; foo < dataPartials.size(); foo++) {
@@ -482,7 +481,7 @@ public class ExperienceManager {
         return dataPartialsDeux;
     }
 
-    List<DataPartial> getIterablePartialsNested(int openIdx, List<DataPartial> dataPartials) throws StargzrException {
+    List<DataPartial> getIterablePartialsNested(int openIdx, List<DataPartial> dataPartials) throws PlsarException {
         List<DataPartial> dataPartialsDeux = new ArrayList<>();
         Integer endIdx = getEndEach(openIdx, dataPartials);
         for (int foo = openIdx; foo < endIdx; foo++) {
@@ -492,7 +491,7 @@ public class ExperienceManager {
         return dataPartialsDeux;
     }
 
-    int getEndEach(int openIdx, List<DataPartial> basePartials) throws StargzrException {
+    int getEndEach(int openIdx, List<DataPartial> basePartials) throws PlsarException {
         Integer openEach = 1;
         Integer endEach = 0;
         for (int qxro = openIdx + 1; qxro < basePartials.size(); qxro++) {
@@ -500,12 +499,12 @@ public class ExperienceManager {
             String basicEntry = basePartial.getEntry();
             if(basicEntry.contains(this.ENDEACH))endEach++;
 
-            if(openEach > 3)throw new StargzrException("too many nested <a:foreach>.");
+            if(openEach > 3)throw new PlsarException("too many nested <a:foreach>.");
             if(basicEntry.contains(this.ENDEACH) && endEach == openEach && endEach != 0){
                 return qxro + 1;
             }
         }
-        throw new StargzrException("missing end </a:foreach>");
+        throw new PlsarException("missing end </a:foreach>");
     }
 
 
@@ -1017,7 +1016,7 @@ public class ExperienceManager {
         return null;
     }
 
-    boolean passesSpec(Object object, DataPartial specPartial, DataPartial dataPartial, ViewCache resp) throws NoSuchMethodException, StargzrException, IllegalAccessException, NoSuchFieldException, InvocationTargetException {
+    boolean passesSpec(Object object, DataPartial specPartial, DataPartial dataPartial, ViewCache resp) throws NoSuchMethodException, PlsarException, IllegalAccessException, NoSuchFieldException, InvocationTargetException {
         if(dataPartial.isWithinIterable() && passesIterableSpec(specPartial, object, resp)){
             return true;
         }

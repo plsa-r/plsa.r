@@ -13,6 +13,7 @@ public class Activity {
     }
 
     public String getDescription() {
+        if(this.description == null) return "";
         return description;
     }
 

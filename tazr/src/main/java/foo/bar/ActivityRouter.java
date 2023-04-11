@@ -3,10 +3,7 @@ package foo.bar;
 import foo.bar.model.Activity;
 import foo.bar.repo.ActivityRepo;
 import net.plsar.RouteAttributes;
-import net.plsar.annotations.Bind;
-import net.plsar.annotations.Component;
-import net.plsar.annotations.Design;
-import net.plsar.annotations.NetworkRouter;
+import net.plsar.annotations.*;
 import net.plsar.annotations.network.Get;
 import net.plsar.annotations.network.Post;
 import net.plsar.model.FlashMessage;
@@ -22,18 +19,20 @@ public class ActivityRouter {
     @Bind
     ActivityRepo activityRepo;
 
-    @Design("/pages/default.svi")
+    @Before({ActivityBefore.class})
+    @Design("/pages/default.ux")
     @Get("/")
     public String index(NetworkRequest req, ViewCache cache, FlashMessage message){
+        System.out.println("index");
         List<Activity> activities = activityRepo.all();
         cache.set("activities", activities);
 
         //a property from my tazr.properties file
         RouteAttributes routeAttributes = req.getRouteAttributes();
         String property = routeAttributes.get("property");
-        message.set(property);
+        System.out.println(property);
 
-        return "pages/index.svi";
+        return "pages/index.ux";
     }
 
     @Post("/save")
@@ -48,7 +47,8 @@ public class ActivityRouter {
             Activity activity = new Activity();
             activity.setDescription(req.getValue("description"));
         */
-        activityRepo.save(activity);
+        int id = activityRepo.save(activity);
+        System.out.println("id: " + id);
         message.set("success.");
         return "redirect:/";
     }

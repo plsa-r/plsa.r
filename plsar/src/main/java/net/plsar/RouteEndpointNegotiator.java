@@ -13,7 +13,6 @@ import net.plsar.resources.StargzrResources;
 import java.io.*;
 import java.lang.reflect.*;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -44,7 +43,7 @@ public class RouteEndpointNegotiator {
             }
 
             StargzrResources stargzrResources = new StargzrResources();
-            ExperienceManager experienceManager = new ExperienceManager();
+            UserExperienceResolver userExperienceResolver = new UserExperienceResolver();
 
             RouteAttributes routeAttributes = networkRequest.getRouteAttributes();
             RouteEndpointHolder routeEndpointHolder = routeAttributes.getRouteEndpointHolder();
@@ -213,52 +212,57 @@ public class RouteEndpointNegotiator {
                 Before beforeAnnotation = routeEndpointInstanceMethod.getAnnotation(Before.class);
 
                 String routePrincipalVariablesElement = beforeAnnotation.variables();
-//                System.out.println("routePrincipalVariablesElement: " + routePrincipalVariablesElement);
                 BeforeAttributes beforeAttributes = new BeforeAttributes();
 
-                String[] routePrincipalVariables = routePrincipalVariablesElement.split(",");
-                Integer routeVariableIndex = 0;
-                List<Object> routeAttributesVariableList = methodComponents.getRouteMethodAttributeVariablesList();
-                for(String routePrincipalVariableElement : routePrincipalVariables){
-                    Object routePrincipalVariableValue = routeAttributesVariableList.get(routeVariableIndex);
-                    String routePrincipalVariable = routePrincipalVariableElement.replace("{", "")
-                            .replace("}", "").trim();
-                    beforeAttributes.set(routePrincipalVariable, routePrincipalVariableValue);
+                if(!methodComponents.getRouteMethodAttributeVariablesList().isEmpty()) {
+                    Integer routeVariableIndex = 0;
+                    String[] routePrincipalVariables = routePrincipalVariablesElement.split(",");
+                    List<Object> routeAttributesVariableList = methodComponents.getRouteMethodAttributeVariablesList();
+                    for (String routePrincipalVariableElement : routePrincipalVariables) {
+                        Object routePrincipalVariableValue = routeAttributesVariableList.get(routeVariableIndex);
+                        String routePrincipalVariable = routePrincipalVariableElement.replace("{", "")
+                                .replace("}", "").trim();
+                        beforeAttributes.set(routePrincipalVariable, routePrincipalVariableValue);
+                    }
                 }
 
                 for(Map.Entry<String, Object> routePrincipalInstance : routeEndpointInstances.entrySet()){
                     String routePrincipalInstanceKey = routePrincipalInstance.getKey().toLowerCase();
-//                    System.out.println("key:" + routePrincipalInstanceKey + ":" + routePrincipalInstance.getValue());
                     beforeAttributes.set(routePrincipalInstanceKey, routePrincipalInstance.getValue());
                 }
 
                 BeforeResult beforeResult = null;
                 Class<?>[] routePrincipalKlasses = beforeAnnotation.value();
-                for(Class<?> routePrincipalKlass : routePrincipalKlasses) {
-                    RouteEndpointBefore routePrincipal = (RouteEndpointBefore) routePrincipalKlass.getConstructor().newInstance();
-                    beforeResult = routePrincipal.before(flashMessage, viewCache, networkRequest, networkResponse, securityManager, beforeAttributes);
-                    if(!beforeResult.getRedirectUri().equals("")){
-                        RedirectInfo redirectInfo = new RedirectInfo();
-                        redirectInfo.setMethodName(routeEndpointInstanceMethod.getName());
-                        redirectInfo.setKlassName(routeInstance.getClass().getName());
+                if(routePrincipalKlasses.length > 0){
+                    for(Class<?> routePrincipalKlass : routePrincipalKlasses) {
+                        RouteEndpointBefore routePrincipal = (RouteEndpointBefore) routePrincipalKlass.getConstructor().newInstance();
+                        beforeResult = routePrincipal.before(flashMessage, viewCache, networkRequest, networkResponse, securityManager, beforeAttributes);
+                        if(beforeResult != null) {
+                            if (!beforeResult.getRedirectUri().equals("")) {
+                                RedirectInfo redirectInfo = new RedirectInfo();
+                                redirectInfo.setMethodName(routeEndpointInstanceMethod.getName());
+                                redirectInfo.setKlassName(routeInstance.getClass().getName());
 
-                        if(beforeResult.getRedirectUri() == null || beforeResult.getRedirectUri().equals("")){
-                            throw new StargzrException("redirect uri is empty on " + routePrincipalKlass.getName());
+                                if (beforeResult.getRedirectUri() == null || beforeResult.getRedirectUri().equals("")) {
+                                    throw new PlsarException("redirect uri is empty on " + routePrincipalKlass.getName());
+                                }
+
+                                String redirectRouteUri = stargzrResources.getRedirect(beforeResult.getRedirectUri());
+
+                                if (!beforeResult.getMessage().equals("")) {
+                                    viewCache.set("message", beforeResult.getMessage());
+                                }
+
+                                networkRequest.setRedirect(true);
+                                networkRequest.setRedirectLocation(redirectRouteUri);
+                                break;
+                            }
                         }
-
-                        String redirectRouteUri = stargzrResources.getRedirect(beforeResult.getRedirectUri());
-
-                        if(!beforeResult.getMessage().equals("")){
-                            viewCache.set("message", beforeResult.getMessage());
-                        }
-
-                        networkRequest.setRedirect(true);
-                        networkRequest.setRedirectLocation(redirectRouteUri);
-                        break;
                     }
                 }
 
-                if(!beforeResult.getRedirectUri().equals("")){
+                if(beforeResult != null &&
+                        !beforeResult.getRedirectUri().equals("")){
                     return new RouteResult("303".getBytes(), "303", "text/html");
                 }
             }
@@ -375,11 +379,11 @@ public class RouteEndpointNegotiator {
                     completePageRendered = completePageRendered.replace("${description}", description);
                 }
 
-                completePageRendered = experienceManager.execute(completePageRendered, viewCache, networkRequest, securityAttributes, viewRenderers);
+                completePageRendered = userExperienceResolver.resolve(completePageRendered, viewCache, networkRequest, securityAttributes, viewRenderers);
                 return new RouteResult(completePageRendered.getBytes(), "200 OK", "text/html");
 
             }else{
-                completePageRendered = experienceManager.execute(completePageRendered, viewCache, networkRequest, securityAttributes, viewRenderers);
+                completePageRendered = userExperienceResolver.resolve(completePageRendered, viewCache, networkRequest, securityAttributes, viewRenderers);
                 return new RouteResult(completePageRendered.getBytes(), "200 OK", "text/html");
             }
 
@@ -404,7 +408,7 @@ public class RouteEndpointNegotiator {
         } catch (IOException ex) {
             errorMessage = "<p style=\"border:solid 1px #ff0000; color:#ff0000;\">" + ex.getMessage() + "</p>";
             ex.printStackTrace();
-        } catch (StargzrException ex) {
+        } catch (PlsarException ex) {
             errorMessage = "<p style=\"border:solid 1px #ff0000; color:#ff0000;\">" + ex.getMessage() + "</p>";
             ex.printStackTrace();
         }

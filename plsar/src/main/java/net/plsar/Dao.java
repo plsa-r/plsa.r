@@ -118,21 +118,30 @@ public class Dao {
         return result;
     }
 
-    public boolean save(String preSql, Object[] sqlparams){
+    public int save(String preSql, Object[] sqlparams){
         try {
             String sql = getPopulatedSqlStatement(preSql, sqlparams);
             Connection connection = datasource.getConnection();
-            Statement statement = connection.createStatement();
-            statement.execute(sql);
+            PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+
+            statement.execute();
+
+            ResultSet rs = statement.getGeneratedKeys();
+            int id = 0;
+            if (rs.next()) {
+                id = rs.getInt(1);
+            }
+
             connection.commit();
             connection.close();
+
+            return id;
         }catch(Exception ex){
             if(config.isDebug()) {
                 Log.info(ex.getMessage());
             }
-            return false;
         }
-        return true;
+        return 0;
     }
 
     public <T> List<T> getList(String preSql, Object[] sqlparams, Class<?> klass){

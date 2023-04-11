@@ -7,9 +7,9 @@ import net.plsar.schemes.RenderingScheme;
 
 public class Launcher {
     public static void main(String[] args){
-        PLSAR PLSAR = new PLSAR(9000);
-        PLSAR.setNumberOfPartitions(30);
-        PLSAR.setNumberOfRequestExecutors(70);
+        PLSAR plsar = new PLSAR(9000);
+        plsar.setNumberOfPartitions(30);
+        plsar.setNumberOfRequestExecutors(70);
 
         PersistenceConfig persistenceConfig = new PersistenceConfig();
         persistenceConfig.setDriver(Drivers.H2);
@@ -29,11 +29,11 @@ public class Launcher {
         PropertiesConfig propertiesConfig = new PropertiesConfig();
         propertiesConfig.setPropertiesFile("tazr.properties");
 
-        PLSAR.setPersistenceConfig(persistenceConfig);
-        PLSAR.setPropertiesConfig(propertiesConfig);
-        PLSAR.setSecurityAccess(AuthAccess.class);
-        PLSAR.setViewConfig(viewConfig);
+        plsar.setPersistenceConfig(persistenceConfig);
+        plsar.setPropertiesConfig(propertiesConfig);
+        plsar.setSecurityAccess(AuthAccess.class);
+        plsar.setViewConfig(viewConfig);
 
-        PLSAR.start();
+        plsar.start();
     }
 }
