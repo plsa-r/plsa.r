@@ -357,11 +357,11 @@ public class RouteEndpointNegotiator {
                     return new RouteResult("design not found.".getBytes(), "200 OK", "text/html");
                 }
 
-                if(!designContent.contains("<stargzr:content/>")){
-                    return new RouteResult("Your html template file is missing <stargzr:content/>".getBytes(), "200 OK", "text/html");
+                if(!designContent.contains("<a:render/>")){
+                    return new RouteResult("Your html template file is missing <a:render/>".getBytes(), "200 OK", "text/html");
                 }
 
-                String[] bits = designContent.split("<stargzr:content/>");
+                String[] bits = designContent.split("<a:render/>");
                 String header = bits[0];
                 String bottom = "";
                 if(bits.length > 1) bottom = bits[1];

@@ -19,7 +19,7 @@ public class AuthenticatedRenderer implements ViewRenderer {
     }
 
     public String getKey() {
-        return "plsar:authenticated";
+        return "a:authenticated";
     }
 
     public Boolean isEval() {

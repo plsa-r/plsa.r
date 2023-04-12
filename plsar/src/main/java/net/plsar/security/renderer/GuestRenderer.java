@@ -18,7 +18,7 @@ public class GuestRenderer implements ViewRenderer {
         return "";
     }
 
-    public String getKey() { return "plsar:guest"; }
+    public String getKey() { return "a:guest"; }
 
     public Boolean isEval() {
         return true;
