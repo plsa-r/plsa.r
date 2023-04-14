@@ -23,7 +23,6 @@ public class PLSAR {
 
     Integer port;
     String PROPERTIES;
-    String RENDERING_SCHEME;
 
     ViewConfig viewConfig;
     PropertiesConfig propertiesConfig;
@@ -90,7 +89,13 @@ public class PLSAR {
             ExecutorService executors = Executors.newFixedThreadPool(numberOfPartitions);
             executors.execute(new PartitionExecutor(viewConfig.getRenderingScheme(), numberOfRequestExecutors, resourcesDirectory, routeAttributes, viewConfig, viewBytesMap, serverSocket, persistenceConfig, viewRenderers, securityAccessKlass));
 
-            Log.info("Ready!");
+            System.out.println("    ____  __   _____ ___      ____");
+            System.out.println("   / __ \\/ /  / ___//   |    / __ \\");
+            System.out.println("  / /_/ / /   \\__ \\/ /| |   / /_/ /");
+            System.out.println(" / ____/ /______/ / ___ |_ / _, _/");
+            System.out.println("/_/   /_____/____/_/  |_(_)_/ |_|\n\n");
+
+            Log.info("Running! \nhttp://localhost:" + port + "/\n\n");
 
         }catch(IOException | NoSuchMethodException | InvocationTargetException | IllegalAccessException | InstantiationException | PlsarException ex){
             ex.printStackTrace();

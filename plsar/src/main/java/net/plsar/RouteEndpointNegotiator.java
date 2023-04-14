@@ -15,6 +15,7 @@ import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +40,11 @@ public class RouteEndpointNegotiator {
             String routeEndpointAction = networkRequest.getRequestAction().toLowerCase();
 
             if(routeEndpointPath.equals("/launcher.status")){
-                return new RouteResult("200 OK".getBytes(), "200 OK", "text/plain");
+                RouteResult routeResult = new RouteResult();
+                routeResult.setContentType("text/plain");
+                routeResult.setResponseBytes("200 Ok".getBytes());
+                routeResult.setResponseCode("200 Ok");
+                return routeResult;
             }
 
             StargzrResources stargzrResources = new StargzrResources();
@@ -56,9 +61,18 @@ public class RouteEndpointNegotiator {
 
                     ByteArrayOutputStream outputStream = stargzrResources.getViewFileCopy(routeEndpointPath, viewBytesMap);
                     if (outputStream == null) {
-                        return new RouteResult("404".getBytes(), "404", "text/html");
+                        RouteResult routeResult = new RouteResult();
+                        routeResult.setContentType("text/plain");
+                        routeResult.setResponseBytes("404 Not Found!".getBytes());
+                        routeResult.setResponseCode("404");
+                        return routeResult;
                     }
-                    return new RouteResult(outputStream.toByteArray(), "200 OK", mimeResolver.resolve());
+
+                    RouteResult routeResult = new RouteResult();
+                    routeResult.setContentType(mimeResolver.resolve());
+                    routeResult.setResponseBytes(outputStream.toByteArray());
+                    routeResult.setResponseCode("200 Ok");
+                    return routeResult;
 
                 }else{
 
@@ -82,7 +96,11 @@ public class RouteEndpointNegotiator {
                         } catch (IOException ex) {
                             ex.printStackTrace();
                         }
-                        return new RouteResult(outputStream.toByteArray(), "200 OK", mimeResolver.resolve());
+                        RouteResult routeResult = new RouteResult();
+                        routeResult.setContentType(mimeResolver.resolve());
+                        routeResult.setResponseBytes(outputStream.toByteArray());
+                        routeResult.setResponseCode("200 Ok");
+                        return routeResult;
                     }
                 }
 
@@ -102,13 +120,6 @@ public class RouteEndpointNegotiator {
                     int endIndex = routeEndpointPath.indexOf("/", routeEndpointPath.length() - 1);
                     routeEndpointPath = routeEndpointPath.substring(0, endIndex);
                 }
-
-//                System.out.println("\n\n=====================");
-//                for(Map.Entry<String, RouteEndpoint> routeEndpointEntry : routeEndpointHolder.getRouteEndpoints().entrySet()){
-//                    System.out.println(routeEndpointEntry.getKey() + " ] ======== [ " + routeEndpointAction + ":" + routeEndpointPath);
-//                }
-//                System.out.println("=====================\n\n");
-
                 if (routeEndpointHolder.getRouteEndpoints().containsKey(routeEndpointAction + ":" + routeEndpointPath)) {
                     routeEndpoint = routeEndpointHolder.getRouteEndpoints().get(routeEndpointAction + ":" + routeEndpointPath);
                 }
@@ -118,9 +129,6 @@ public class RouteEndpointNegotiator {
                 for (Map.Entry<String, RouteEndpoint> routeEndpointEntry : routeEndpointHolder.getRouteEndpoints().entrySet()) {
                     RouteEndpoint activeRouteEndpoint = routeEndpointEntry.getValue();
                     Matcher routeEndpointMatcher = Pattern.compile(activeRouteEndpoint.getRegexRoutePath()).matcher(routeEndpointPath);
-//                    System.out.println("m:" + routeEndpointMatcher.matches() + ":" +
-//                            "rz:" + getRouteVariablesMatch(routeEndpointPath, activeRouteEndpoint) + ":" +
-//                            "z:" + activeRouteEndpoint.isRegex() + ":" + activeRouteEndpoint.getRoutePath());
                     if (routeEndpointMatcher.matches() &&
                             getRouteVariablesMatch(routeEndpointPath, activeRouteEndpoint) &&
                             activeRouteEndpoint.isRegex()) {
@@ -129,19 +137,15 @@ public class RouteEndpointNegotiator {
                 }
             }
 
-
             if(routeEndpoint == null){
-                return new RouteResult("404".getBytes(), "404", "text/html");
+                RouteResult routeResult = new RouteResult();
+                routeResult.setContentType("text/plain");
+                routeResult.setResponseBytes("404 Not Found!".getBytes());
+                routeResult.setResponseCode("404");
+                return routeResult;
             }
 
-            //todo:
-//            if(initialsRegistry.containsKey(routeEndpoint.getRouteMethod().getName()) &&
-//                    initialsRegistry.get(routeEndpoint.getRouteMethod().getName()).getKlassName().equals(routeEndpoint.getKlass().getName())){
-//                initialsRegistry.remove(routeEndpoint.getRouteMethod().getName());
-//                return new RouteResult(true);
-//            }
-
-            MethodComponents methodComponents = getMethodAttributesComponents(routeEndpointPath, viewCache, flashMessage, networkRequest, networkResponse, securityManager, routeEndpoint);
+            MethodComponents methodComponents = getMethodAttributesComponents(routeEndpointPath, new BeforeResult(), viewCache, flashMessage, networkRequest, networkResponse, securityManager, routeEndpoint);
             Method routeEndpointInstanceMethod = routeEndpoint.getRouteMethod();
 
             String title = null, keywords = null, description = null;
@@ -155,122 +159,43 @@ public class RouteEndpointNegotiator {
             routeEndpointInstanceMethod.setAccessible(true);
             Object routeInstance = routeEndpoint.getKlass().getConstructor().newInstance();
 
-            Map<String, Object> routeEndpointInstances = new HashMap<>();
-            PersistenceConfig persistenceConfig = routeAttributes.getPersistenceConfig();
-            if(persistenceConfig != null) {
-                Dao routeDao = new Dao(persistenceConfig);
+            RouteDependencyResolver routeDependencyResolver = new RouteDependencyResolver();
+            routeDependencyResolver.setRouteInstance(routeInstance);
+            routeDependencyResolver.setComponentsHolder(componentsHolder);
+            routeDependencyResolver.setRouteAttributes(routeAttributes);
+            Map<String, Object> routeEndpointInstances = routeDependencyResolver.resolve();
 
-                Field[] routeFields = routeInstance.getClass().getDeclaredFields();
-                for (Field routeField : routeFields) {
-                    if (routeField.isAnnotationPresent(Bind.class)) {
-                        String fieldKey = routeField.getName().toLowerCase();
+            BeforeRouteResolver beforeRouteResolver = new BeforeRouteResolver();
+            beforeRouteResolver.setViewCache(viewCache);
+            beforeRouteResolver.setRouteInstance(routeInstance);
+            beforeRouteResolver.setNetworkRequest(networkRequest);
+            beforeRouteResolver.setNetworkResponse(networkResponse);
+            beforeRouteResolver.setSecurityManager(securityManager);
+            beforeRouteResolver.setMethodComponents(methodComponents);
+            beforeRouteResolver.setRouteEndpointInstanceMethod(routeEndpointInstanceMethod);
+            beforeRouteResolver.setRouteEndpointInstances(routeEndpointInstances);
+            BeforeResult beforeResult = beforeRouteResolver.resolve();
 
-                        if (componentsHolder.getServices().containsKey(fieldKey)) {
-                            Class<?> serviceKlass = componentsHolder.getServices().get(fieldKey);
-                            Constructor<?> serviceKlassConstructor = serviceKlass.getConstructor();
-                            Object serviceInstance = serviceKlassConstructor.newInstance();
-
-                            Field[] repoFields = serviceInstance.getClass().getDeclaredFields();
-                            for (Field repoField : repoFields) {
-                                if (repoField.isAnnotationPresent(Bind.class)) {
-                                    String repoFieldKey = repoField.getName().toLowerCase();
-
-                                    if (componentsHolder.getRepositories().containsKey(repoFieldKey)) {
-                                        Class<?> repositoryKlass = componentsHolder.getRepositories().get(repoFieldKey);
-                                        Constructor<?> repositoryKlassConstructor = repositoryKlass.getConstructor(Dao.class);
-                                        Object repositoryInstance = repositoryKlassConstructor.newInstance(routeDao);
-                                        repoField.setAccessible(true);
-                                        repoField.set(serviceInstance, repositoryInstance);
-                                        routeEndpointInstances.put(repoFieldKey, repositoryInstance);
-                                    }
-                                }
-                            }
-
-                            routeField.setAccessible(true);
-                            routeField.set(routeInstance, serviceInstance);
-                        }
-
-                        if (componentsHolder.getRepositories().containsKey(fieldKey)) {
-                            Class<?> componentKlass = componentsHolder.getRepositories().get(fieldKey);
-                            Constructor<?> componentKlassConstructor = componentKlass.getConstructor(Dao.class);
-                            Object componentInstance = componentKlassConstructor.newInstance(routeDao);
-                            routeField.setAccessible(true);
-                            routeField.set(routeInstance, componentInstance);
-                            routeEndpointInstances.put(fieldKey, componentInstance);
-                        }
-                    }
-                }
-
-                try {
-                    Method setPersistenceMethod = routeInstance.getClass().getMethod("setDao", Dao.class);
-                    setPersistenceMethod.invoke(routeInstance, new Dao(persistenceConfig));
-                } catch (NoSuchMethodException nsme) { }
-
+            if(beforeResult != null &&
+                    !beforeResult.getRedirectUri().equals("")){
+                RouteResult routeResult = new RouteResult();
+                routeResult.setContentType("text/plain");
+                routeResult.setResponseBytes("303".getBytes());
+                routeResult.setResponseCode("303");
+                return routeResult;
             }
+            System.out.println(beforeResult);
 
-            if(routeEndpointInstanceMethod.isAnnotationPresent(Before.class)){
-                Before beforeAnnotation = routeEndpointInstanceMethod.getAnnotation(Before.class);
-
-                String routePrincipalVariablesElement = beforeAnnotation.variables();
-                BeforeAttributes beforeAttributes = new BeforeAttributes();
-
-                if(!methodComponents.getRouteMethodAttributeVariablesList().isEmpty()) {
-                    Integer routeVariableIndex = 0;
-                    String[] routePrincipalVariables = routePrincipalVariablesElement.split(",");
-                    List<Object> routeAttributesVariableList = methodComponents.getRouteMethodAttributeVariablesList();
-                    for (String routePrincipalVariableElement : routePrincipalVariables) {
-                        Object routePrincipalVariableValue = routeAttributesVariableList.get(routeVariableIndex);
-                        String routePrincipalVariable = routePrincipalVariableElement.replace("{", "")
-                                .replace("}", "").trim();
-                        beforeAttributes.set(routePrincipalVariable, routePrincipalVariableValue);
-                    }
-                }
-
-                for(Map.Entry<String, Object> routePrincipalInstance : routeEndpointInstances.entrySet()){
-                    String routePrincipalInstanceKey = routePrincipalInstance.getKey().toLowerCase();
-                    beforeAttributes.set(routePrincipalInstanceKey, routePrincipalInstance.getValue());
-                }
-
-                BeforeResult beforeResult = null;
-                Class<?>[] routePrincipalKlasses = beforeAnnotation.value();
-                if(routePrincipalKlasses.length > 0){
-                    for(Class<?> routePrincipalKlass : routePrincipalKlasses) {
-                        RouteEndpointBefore routePrincipal = (RouteEndpointBefore) routePrincipalKlass.getConstructor().newInstance();
-                        beforeResult = routePrincipal.before(flashMessage, viewCache, networkRequest, networkResponse, securityManager, beforeAttributes);
-                        if(beforeResult != null) {
-                            if (!beforeResult.getRedirectUri().equals("")) {
-                                RedirectInfo redirectInfo = new RedirectInfo();
-                                redirectInfo.setMethodName(routeEndpointInstanceMethod.getName());
-                                redirectInfo.setKlassName(routeInstance.getClass().getName());
-
-                                if (beforeResult.getRedirectUri() == null || beforeResult.getRedirectUri().equals("")) {
-                                    throw new PlsarException("redirect uri is empty on " + routePrincipalKlass.getName());
-                                }
-
-                                String redirectRouteUri = stargzrResources.getRedirect(beforeResult.getRedirectUri());
-
-                                if (!beforeResult.getMessage().equals("")) {
-                                    viewCache.set("message", beforeResult.getMessage());
-                                }
-
-                                networkRequest.setRedirect(true);
-                                networkRequest.setRedirectLocation(redirectRouteUri);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if(beforeResult != null &&
-                        !beforeResult.getRedirectUri().equals("")){
-                    return new RouteResult("303".getBytes(), "303", "text/html");
-                }
-            }
-
-            Object routeResponseObject = routeEndpointInstanceMethod.invoke(routeInstance, methodComponents.getRouteMethodAttributesList().toArray());
+            ArrayList methodParametersArr = addOrderBeforeResult(beforeResult, methodComponents);
+            Object[] methodParametersLst = methodParametersArr.toArray();
+            Object routeResponseObject = routeEndpointInstanceMethod.invoke(routeInstance, methodParametersLst);
             String methodResponse = String.valueOf(routeResponseObject);
             if(methodResponse == null){
-                return new RouteResult("404".getBytes(), "404", "text/html");
+                RouteResult routeResult = new RouteResult();
+                routeResult.setContentType("text/plain");
+                routeResult.setResponseBytes("404 Not Found!".getBytes());
+                routeResult.setResponseCode("404");
+                return routeResult;
             }
 
             if(methodResponse.startsWith("redirect:")) {
@@ -280,15 +205,28 @@ public class RouteEndpointNegotiator {
                 String redirectRouteUri = stargzrResources.getRedirect(methodResponse);
                 networkRequest.setRedirect(true);
                 networkRequest.setRedirectLocation(redirectRouteUri);
-                return new RouteResult("303".getBytes(), "303", "text/html");
+
+                RouteResult routeResult = new RouteResult();
+                routeResult.setContentType("text/html");
+                routeResult.setResponseBytes("303".getBytes());
+                routeResult.setResponseCode("303");
+                return routeResult;
             }
 
             if(routeEndpointInstanceMethod.isAnnotationPresent(JsonOutput.class)){
-                return new RouteResult(methodResponse.getBytes(), "200 OK", "application/json");
+                RouteResult routeResult = new RouteResult();
+                routeResult.setContentType("application/json");
+                routeResult.setResponseBytes(methodResponse.getBytes());
+                routeResult.setResponseCode("200 Ok");
+                return routeResult;
             }
 
             if(routeEndpointInstanceMethod.isAnnotationPresent(Text.class)){
-                return new RouteResult(methodResponse.getBytes(), "200 OK", "text/html");
+                RouteResult routeResult = new RouteResult();
+                routeResult.setContentType("text/html");
+                routeResult.setResponseBytes(methodResponse.getBytes());
+                routeResult.setResponseCode("200 Ok");
+                return routeResult;
             }
 
             if(RENDERER.equals("cache-request")) {
@@ -354,11 +292,19 @@ public class RouteEndpointNegotiator {
                 }
 
                 if(designContent == null){
-                    return new RouteResult("design not found.".getBytes(), "200 OK", "text/html");
+                    RouteResult routeResult = new RouteResult();
+                    routeResult.setContentType("text/plain");
+                    routeResult.setResponseBytes("404 Design Not Found!".getBytes());
+                    routeResult.setResponseCode("200 Ok");
+                    return routeResult;
                 }
 
                 if(!designContent.contains("<a:render/>")){
-                    return new RouteResult("Your html template file is missing <a:render/>".getBytes(), "200 OK", "text/html");
+                    RouteResult routeResult = new RouteResult();
+                    routeResult.setContentType("text/plain");
+                    routeResult.setResponseBytes("Design file is missing <a:render/>".getBytes());
+                    routeResult.setResponseCode("200 Ok");
+                    return routeResult;
                 }
 
                 String[] bits = designContent.split("<a:render/>");
@@ -380,11 +326,21 @@ public class RouteEndpointNegotiator {
                 }
 
                 completePageRendered = userExperienceResolver.resolve(completePageRendered, viewCache, networkRequest, securityAttributes, viewRenderers);
-                return new RouteResult(completePageRendered.getBytes(), "200 OK", "text/html");
+
+                RouteResult routeResult = new RouteResult();
+                routeResult.setContentType("text/html");
+                routeResult.setResponseBytes(completePageRendered.getBytes());
+                routeResult.setResponseCode("200 Ok");
+                return routeResult;
 
             }else{
                 completePageRendered = userExperienceResolver.resolve(completePageRendered, viewCache, networkRequest, securityAttributes, viewRenderers);
-                return new RouteResult(completePageRendered.getBytes(), "200 OK", "text/html");
+
+                RouteResult routeResult = new RouteResult();
+                routeResult.setContentType("text/html");
+                routeResult.setResponseBytes(completePageRendered.getBytes());
+                routeResult.setResponseCode("200 Ok");
+                return routeResult;
             }
 
         }catch (IllegalAccessException ex) {
@@ -413,14 +369,31 @@ public class RouteEndpointNegotiator {
             ex.printStackTrace();
         }
         String erroredPageRendered = errorMessage + completePageRendered;
-        return new RouteResult(erroredPageRendered.getBytes(), "404", "text/html");
+        RouteResult routeResult = new RouteResult();
+        routeResult.setContentType("text/plain");
+        routeResult.setResponseBytes(erroredPageRendered.getBytes());
+        routeResult.setResponseCode("500");
+        return routeResult;
+    }
+
+    ArrayList addOrderBeforeResult(BeforeResult beforeResult, MethodComponents methodComponents){
+        ArrayList methodComponentsLst = new ArrayList();
+        for(Map.Entry<String, MethodAttribute> entry: methodComponents.getRouteMethodAttributes().entrySet()){
+            if(entry.getKey().equals("beforeresult")){
+                methodComponentsLst.add(beforeResult);
+            }else{
+                methodComponentsLst.add(entry.getValue().getAttribute());
+            }
+        }
+        return methodComponentsLst;
     }
 
 
-    MethodComponents getMethodAttributesComponents(String routeEndpointPath, ViewCache viewCache, FlashMessage flashMessage, NetworkRequest networkRequest, NetworkResponse networkResponse, SecurityManager securityManager, RouteEndpoint routeEndpoint) {
+
+    MethodComponents getMethodAttributesComponents(String routeEndpointPath, BeforeResult beforeResult, ViewCache viewCache, FlashMessage flashMessage, NetworkRequest networkRequest, NetworkResponse networkResponse, SecurityManager securityManager, RouteEndpoint routeEndpoint) {
         MethodComponents methodComponents = new MethodComponents();
         Parameter[] endpointMethodAttributes = routeEndpoint.getRouteMethod().getParameters();
-        Integer index = 0;
+
         Integer pathVariableIndex = 0;
         String routeEndpointPathClean = routeEndpointPath.replaceFirst("/", "");
         String[] routePathUriAttributes = routeEndpointPathClean.split("/");
@@ -456,6 +429,12 @@ public class RouteEndpointNegotiator {
                 methodAttribute.setAttribute(flashMessage);
                 methodComponents.getRouteMethodAttributes().put("flashmessage", methodAttribute);
                 methodComponents.getRouteMethodAttributesList().add(flashMessage);
+            }
+            if(endpointMethodAttribute.getType().getTypeName().equals("net.plsar.model.BeforeResult")){
+                methodAttribute.setDescription("beforeresult");
+                methodAttribute.setAttribute(beforeResult);
+                methodComponents.getRouteMethodAttributes().put("beforeresult", methodAttribute);
+                methodComponents.getRouteMethodAttributesList().add(beforeResult);
             }
             if(endpointMethodAttribute.getType().getTypeName().equals("net.plsar.model.ViewCache")){
                 methodAttribute.setDescription("viewcache");

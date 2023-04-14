@@ -2,21 +2,18 @@ package net.plsar.model;
 
 import net.plsar.MethodAttribute;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MethodComponents {
     public MethodComponents(){
         this.routeMethodAttributeVariablesList = new ArrayList<>();
         this.routeMethodAttributesList = new ArrayList<>();
-        this.routeMethodAttributes = new HashMap<>();
+        this.routeMethodAttributes = new LinkedHashMap<>();
     }
 
     List<Object> routeMethodAttributesList;
     List<Object> routeMethodAttributeVariablesList;
-    Map<String, MethodAttribute> routeMethodAttributes;
+    LinkedHashMap<String, MethodAttribute> routeMethodAttributes;
 
     public List<Object> getRouteMethodAttributesList() {
         return routeMethodAttributesList;
@@ -34,11 +31,11 @@ public class MethodComponents {
         this.routeMethodAttributeVariablesList = routeMethodAttributeVariablesList;
     }
 
-    public Map<String, MethodAttribute> getRouteMethodAttributes() {
+    public LinkedHashMap<String, MethodAttribute> getRouteMethodAttributes() {
         return routeMethodAttributes;
     }
 
-    public void setRouteMethodAttributes(Map<String, MethodAttribute> routeMethodAttributes) {
+    public void setRouteMethodAttributes(LinkedHashMap<String, MethodAttribute> routeMethodAttributes) {
         this.routeMethodAttributes = routeMethodAttributes;
     }
 }

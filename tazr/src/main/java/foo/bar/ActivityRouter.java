@@ -6,6 +6,7 @@ import net.plsar.RouteAttributes;
 import net.plsar.annotations.*;
 import net.plsar.annotations.network.Get;
 import net.plsar.annotations.network.Post;
+import net.plsar.model.BeforeResult;
 import net.plsar.model.FlashMessage;
 import net.plsar.model.NetworkRequest;
 import net.plsar.model.ViewCache;
@@ -22,7 +23,7 @@ public class ActivityRouter {
     @Before({ActivityBefore.class})
     @Design("/pages/default.ux")
     @Get("/")
-    public String index(NetworkRequest req, ViewCache cache, FlashMessage message){
+    public String index(NetworkRequest req, ViewCache cache, FlashMessage message, BeforeResult beforeResult){
         System.out.println("index");
         List<Activity> activities = activityRepo.all();
         cache.set("activities", activities);
@@ -31,6 +32,7 @@ public class ActivityRouter {
         RouteAttributes routeAttributes = req.getRouteAttributes();
         String property = routeAttributes.get("property");
         System.out.println(property);
+        System.out.println("value passed from before: " + beforeResult.get("key"));
 
         return "pages/index.ux";
     }

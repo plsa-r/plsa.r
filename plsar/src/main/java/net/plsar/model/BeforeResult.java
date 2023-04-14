@@ -1,17 +1,45 @@
 package net.plsar.model;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 public class BeforeResult {
     public BeforeResult(String redirectUri) {
         this.message = "";
         this.redirectUri = redirectUri;
+        this.attributes = new ConcurrentHashMap<>();
     }
     public BeforeResult(){
         this.message = "";
         this.redirectUri = "";
+        this.attributes = new ConcurrentHashMap<>();
     }
 
-    String redirectUri;
     String message;
+    String redirectUri;
+    ConcurrentMap<String, Object> attributes;
+
+    public Object get(String key){
+        if(attributes.containsKey(key)){
+            return attributes.get(key);
+        }
+        return null;
+    }
+
+    public void set(String key, Object value){
+        if(!attributes.containsKey(key)){
+            attributes.put(key, value);
+        }
+    }
+
+    public String getMessage() {
+        if(message == null) return "";
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
     public String getRedirectUri() {
         if(redirectUri == null) return "";
@@ -22,12 +50,11 @@ public class BeforeResult {
         this.redirectUri = redirectUri;
     }
 
-    public String getMessage() {
-        if(message == null) return "";
-        return message;
+    public ConcurrentMap<String, Object> getAttributes() {
+        return attributes;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public void setAttributes(ConcurrentMap<String, Object> attributes) {
+        this.attributes = attributes;
     }
 }

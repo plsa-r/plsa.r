@@ -24,7 +24,7 @@ public class DatabaseEnvironmentManager {
             if (!schemaConfigFile.exists()) {
                 Log.info("non-persistence mode");
                 Log.info("schema.sql missing in src/main/resources/. project will be treated as a non persistent application.");
-                Log.info("database environment setup complete");
+                Log.info("Database environment setup complete");
                 return;
             }
 
@@ -32,7 +32,7 @@ public class DatabaseEnvironmentManager {
 
             if (in == null || in.available() == 0) {
                 Log.info("src/main/resources/{schema}.sql contains no tables. project will be treated as a non persistent application.");
-                Log.info("database environment setup complete");
+                Log.info("Database environment setup complete");
                 return;
             }
 
@@ -63,7 +63,7 @@ public class DatabaseEnvironmentManager {
             conn.commit();
             conn.close();
 
-            Log.info("database environment setup complete");
+            Log.info("Database environment setup complete");
 
         } catch (SQLException throwables) {
             throwables.printStackTrace();

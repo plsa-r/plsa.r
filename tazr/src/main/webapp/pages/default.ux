@@ -6,7 +6,7 @@
 <body>
 
     <div class="content">
-        <stargzr:content/>
+        <a:render/>
     </div>
 
 </body>
