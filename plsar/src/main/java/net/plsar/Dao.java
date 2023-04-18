@@ -118,7 +118,7 @@ public class Dao {
         return result;
     }
 
-    public int save(String preSql, Object[] sqlparams){
+    public Long save(String preSql, Object[] sqlparams){
         try {
             String sql = getPopulatedSqlStatement(preSql, sqlparams);
             Connection connection = datasource.getConnection();
@@ -127,9 +127,9 @@ public class Dao {
             statement.execute();
 
             ResultSet rs = statement.getGeneratedKeys();
-            int id = 0;
+            Long id = 0L;
             if (rs.next()) {
-                id = rs.getInt(1);
+                id = rs.getLong(1);
             }
 
             connection.commit();
@@ -141,7 +141,7 @@ public class Dao {
                 Log.info(ex.getMessage());
             }
         }
-        return 0;
+        return 0L;
     }
 
     public <T> List<T> getList(String preSql, Object[] sqlparams, Class<?> klass){

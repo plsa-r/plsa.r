@@ -45,9 +45,9 @@ public class ActivityRepo {
         return activities;
     }
 
-    public int save(Activity activity) {
+    public Long save(Activity activity) {
         String sql = "insert into activities (description) values ('[+]')";
-        int id = dao.save(sql, new Object[]{
+        Long id = dao.save(sql, new Object[]{
                 activity.getDescription()
         });
         return id;

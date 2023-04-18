@@ -87,24 +87,11 @@ public class PLSAR {
             ExecutorService executors = Executors.newFixedThreadPool(numberOfPartitions);
             executors.execute(new PartitionExecutor(viewConfig.getRenderingScheme(), numberOfRequestExecutors, resourcesDirectory, routeAttributes, viewConfig, viewBytesMap, serverSocket, persistenceConfig, viewRenderers, securityAccessKlass));
 
-
-            System.out.println("");
-            System.out.println("                __");
-            System.out.println("               /\\ \\");
-            System.out.println("              / /\\ \\");
-            System.out.println("             / /__\\ \\");
-            System.out.println("             \\/____\\/");
-            System.out.println("                          __");
-            System.out.println("                         /\\ \\");
-            System.out.println("                        / /\\ \\");
-            System.out.println("                       / /__\\ \\");
-            System.out.println("                       \\/____\\/");
-            System.out.println("\n");
-            System.out.println("    ____  __   _____ ___      ____");
+            System.out.println("\n    ____  __   _____ ___      ____");
             System.out.println("   / __ \\/ /  / ___//   |    / __ \\");
             System.out.println("  / /_/ / /   \\__ \\/ /| |   / /_/ /");
             System.out.println(" / ____/ /______/ / ___ |_ / _, _/");
-            System.out.println("/_/   /_____/____/_/  |_(_)_/ |_|\n\n\n\n");
+            System.out.println("/_/   /_____/____/_/  |_(_)_/ |_|\n\n");
 
             System.out.println("INFO: http://localhost:" + port + "/\n\n");
 //            Log.info("http://localhost:" + port + "/\n\n");

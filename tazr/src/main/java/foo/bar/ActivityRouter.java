@@ -49,7 +49,7 @@ public class ActivityRouter {
             Activity activity = new Activity();
             activity.setDescription(req.getValue("description"));
         */
-        int id = activityRepo.save(activity);
+        Long id = activityRepo.save(activity);
         System.out.println("id: " + id);
         message.set("success.");
         return "redirect:/";
