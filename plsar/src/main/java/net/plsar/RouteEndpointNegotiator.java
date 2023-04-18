@@ -388,8 +388,7 @@ public class RouteEndpointNegotiator {
         return methodComponentsLst;
     }
 
-
-
+    
     MethodComponents getMethodAttributesComponents(String routeEndpointPath, BeforeResult beforeResult, ViewCache viewCache, FlashMessage flashMessage, NetworkRequest networkRequest, NetworkResponse networkResponse, SecurityManager securityManager, RouteEndpoint routeEndpoint) {
         MethodComponents methodComponents = new MethodComponents();
         Parameter[] endpointMethodAttributes = routeEndpoint.getRouteMethod().getParameters();

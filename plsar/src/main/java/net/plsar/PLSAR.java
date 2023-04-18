@@ -76,26 +76,38 @@ public class PLSAR {
             String resourcesDirectory = viewConfig.getResourcesPath();
             ConcurrentMap<String, byte[]> viewBytesMap = stargzrResources.getViewBytesMap(viewConfig);
 
-            Log.info("Running startup routine, please wait...");
             if (serverStartup != null) {
                 Method startupMethod = serverStartup.getKlass().getMethod("startup");
                 Object startupObject = serverStartup.getKlass().getConstructor().newInstance();
                 startupMethod.invoke(startupObject);
             }
 
-            Log.info("Registering network request negotiators, please wait...\n");
             ServerSocket serverSocket = new ServerSocket(port);
             serverSocket.setPerformancePreferences(0, 1, 2);
             ExecutorService executors = Executors.newFixedThreadPool(numberOfPartitions);
             executors.execute(new PartitionExecutor(viewConfig.getRenderingScheme(), numberOfRequestExecutors, resourcesDirectory, routeAttributes, viewConfig, viewBytesMap, serverSocket, persistenceConfig, viewRenderers, securityAccessKlass));
 
+
+            System.out.println("");
+            System.out.println("                __");
+            System.out.println("               /\\ \\");
+            System.out.println("              / /\\ \\");
+            System.out.println("             / /__\\ \\");
+            System.out.println("             \\/____\\/");
+            System.out.println("                          __");
+            System.out.println("                         /\\ \\");
+            System.out.println("                        / /\\ \\");
+            System.out.println("                       / /__\\ \\");
+            System.out.println("                       \\/____\\/");
+            System.out.println("\n");
             System.out.println("    ____  __   _____ ___      ____");
             System.out.println("   / __ \\/ /  / ___//   |    / __ \\");
             System.out.println("  / /_/ / /   \\__ \\/ /| |   / /_/ /");
             System.out.println(" / ____/ /______/ / ___ |_ / _, _/");
-            System.out.println("/_/   /_____/____/_/  |_(_)_/ |_|\n\n");
+            System.out.println("/_/   /_____/____/_/  |_(_)_/ |_|\n\n\n\n");
 
-            Log.info("Running! \nhttp://localhost:" + port + "/\n\n");
+            System.out.println("INFO: http://localhost:" + port + "/\n\n");
+//            Log.info("http://localhost:" + port + "/\n\n");
 
         }catch(IOException | NoSuchMethodException | InvocationTargetException | IllegalAccessException | InstantiationException | PlsarException ex){
             ex.printStackTrace();
