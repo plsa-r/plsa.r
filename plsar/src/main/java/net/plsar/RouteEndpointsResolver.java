@@ -51,41 +51,46 @@ public class RouteEndpointsResolver {
 
                 String separator = System.getProperty("file.separator");
                 String regex = "classes" + "\\" + separator;
-                String[] klassPathParts = file.getPath().split(regex);
-                String klassPathSlashesRemoved =  klassPathParts[1].replace("\\", ".");
-                String klassPathPeriod = klassPathSlashesRemoved.replace("/",".");
-                String klassPathBefore = klassPathPeriod.replace("."+ "class", "");
 
-                String klassPath = klassPathBefore.replaceFirst("java.", "").replaceFirst("main.", "");
-                Class<?> klass = klassLoader.loadClass(klassPath);
+                if(file.getPath().contains("classes" + separator)) {
 
-                if (klass.isAnnotation() || klass.isInterface()) continue;
+                    String[] klassPathParts = file.getPath().split(regex);
+                    String klassPathSlashesRemoved = klassPathParts[1].replace("\\", ".");
+                    String klassPathPeriod = klassPathSlashesRemoved.replace("/", ".");
+                    String klassPathBefore = klassPathPeriod.replace("." + "class", "");
 
-                if(klass.isAnnotationPresent(Controller.class) ||
-                        klass.isAnnotationPresent(NetworkRouter.class)) {
-                    Method[] routeMethods = klass.getDeclaredMethods();
-                    for(Method routeMethod: routeMethods){
+                    String klassPathJava = klassPathBefore.replaceFirst("java.", "").replaceFirst("main.", "");
+                    String klassPath = klassPathJava.replaceFirst("test.", "");
+                    Class<?> klass = klassLoader.loadClass(klassPath);
 
-                        if(routeMethod.isAnnotationPresent(Get.class)){
-                            Get annotation = routeMethod.getAnnotation(Get.class);
-                            String routePath = annotation.value();
-                            RouteEndpoint routeEndpoint = getCompleteRouteEndpoint("get", routePath, routeMethod, klass);
-                            String routeKey = routeEndpoint.getRouteVerb() + ":" + routeEndpoint.getRoutePath().toLowerCase();
-                            routeEndpointHolder.getRouteEndpoints().put(routeKey, routeEndpoint);
-                        }
-                        if(routeMethod.isAnnotationPresent(Post.class)){
-                            Post annotation = routeMethod.getAnnotation(Post.class);
-                            String routePath = annotation.value();
-                            RouteEndpoint routeEndpoint = getCompleteRouteEndpoint("post", routePath, routeMethod, klass);
-                            String routeKey = routeEndpoint.getRouteVerb() + ":" + routeEndpoint.getRoutePath();
-                            routeEndpointHolder.getRouteEndpoints().put(routeKey, routeEndpoint);
-                        }
-                        if(routeMethod.isAnnotationPresent(Delete.class)){
-                            Delete annotation = routeMethod.getAnnotation(Delete.class);
-                            String routePath = annotation.value();
-                            RouteEndpoint routeEndpoint = getCompleteRouteEndpoint("delete", routePath, routeMethod, klass);
-                            String routeKey = routeEndpoint.getRouteVerb() + ":" + routeEndpoint.getRoutePath();
-                            routeEndpointHolder.getRouteEndpoints().put(routeKey, routeEndpoint);
+                    if (klass.isAnnotation() || klass.isInterface()) continue;
+
+                    if (klass.isAnnotationPresent(Controller.class) ||
+                            klass.isAnnotationPresent(NetworkRouter.class)) {
+                        Method[] routeMethods = klass.getDeclaredMethods();
+                        for (Method routeMethod : routeMethods) {
+
+                            if (routeMethod.isAnnotationPresent(Get.class)) {
+                                Get annotation = routeMethod.getAnnotation(Get.class);
+                                String routePath = annotation.value();
+                                RouteEndpoint routeEndpoint = getCompleteRouteEndpoint("get", routePath, routeMethod, klass);
+                                String routeKey = routeEndpoint.getRouteVerb() + ":" + routeEndpoint.getRoutePath().toLowerCase();
+                                routeEndpointHolder.getRouteEndpoints().put(routeKey, routeEndpoint);
+                            }
+                            if (routeMethod.isAnnotationPresent(Post.class)) {
+                                Post annotation = routeMethod.getAnnotation(Post.class);
+                                String routePath = annotation.value();
+                                RouteEndpoint routeEndpoint = getCompleteRouteEndpoint("post", routePath, routeMethod, klass);
+                                String routeKey = routeEndpoint.getRouteVerb() + ":" + routeEndpoint.getRoutePath();
+                                routeEndpointHolder.getRouteEndpoints().put(routeKey, routeEndpoint);
+                            }
+                            if (routeMethod.isAnnotationPresent(Delete.class)) {
+                                Delete annotation = routeMethod.getAnnotation(Delete.class);
+                                String routePath = annotation.value();
+                                RouteEndpoint routeEndpoint = getCompleteRouteEndpoint("delete", routePath, routeMethod, klass);
+                                String routeKey = routeEndpoint.getRouteVerb() + ":" + routeEndpoint.getRoutePath();
+                                routeEndpointHolder.getRouteEndpoints().put(routeKey, routeEndpoint);
+                            }
                         }
                     }
                 }

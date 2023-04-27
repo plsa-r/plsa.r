@@ -11,14 +11,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RouteDependencyResolver {
+    public RouteDependencyResolver(){
+        this.routeEndpointInstances = new HashMap<>();
+    }
 
     Object routeInstance;
-    ComponentsHolder componentsHolder;
     RouteAttributes routeAttributes;
+    ComponentsHolder componentsHolder;
     Map<String, Object> routeEndpointInstances;
 
     public Map<String, Object> resolve() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        routeEndpointInstances = new HashMap<>();
+
         PersistenceConfig persistenceConfig = routeAttributes.getPersistenceConfig();
         if (persistenceConfig != null) {
             Dao routeDao = new Dao(persistenceConfig);

@@ -160,10 +160,12 @@ public class NetworkRequestFactory {
         this.securityAccessKlass = securityAccessKlass;
     }
 
-    public void closeStreamConnections() throws IOException {
-        requestInputStream.close();
-        requestOutputStream.flush();
-        requestOutputStream.close();
+    public void closeStreamConnections(){
+        try {
+            requestInputStream.close();
+            requestOutputStream.flush();
+            requestOutputStream.close();
+        }catch(Exception ex){}
     }
 
 }

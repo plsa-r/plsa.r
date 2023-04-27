@@ -1,6 +1,5 @@
 package net.plsar;
 
-import net.plsar.resources.ComponentAnnotationInspector;
 import net.plsar.resources.ComponentsHolder;
 import net.plsar.resources.StargzrResources;
 import net.plsar.security.SecurityAccess;

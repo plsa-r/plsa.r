@@ -4,7 +4,6 @@ import net.plsar.environments.Environments;
 import net.plsar.resources.AnnotationComponent;
 import net.plsar.resources.ComponentsHolder;
 import net.plsar.resources.StargzrResources;
-import net.plsar.resources.StartupAnnotationInspector;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -32,6 +31,8 @@ public class PLSAR {
     Class<?> securityAccessKlass;
     List<Class<?>> viewRenderers;
 
+    ServerSocket serverSocket;
+
     public PLSAR(){
         this.port = 9000;
         this.PROPERTIES = "system.properties";
@@ -57,9 +58,9 @@ public class PLSAR {
                 databaseEnvironmentManager.configure();
             }
 
-            StartupAnnotationInspector startupAnnotationInspector = new StartupAnnotationInspector(new ComponentsHolder());
-            startupAnnotationInspector.inspect();
-            ComponentsHolder componentsHolder = startupAnnotationInspector.getComponentsHolder();
+            StartupAnnotationResolver startupAnnotationResolver = new StartupAnnotationResolver(new ComponentsHolder());
+            startupAnnotationResolver.resolve();
+            ComponentsHolder componentsHolder = startupAnnotationResolver.getComponentsHolder();
 
             if (propertiesConfig == null) {
                 propertiesConfig = new PropertiesConfig();
@@ -82,7 +83,7 @@ public class PLSAR {
                 startupMethod.invoke(startupObject);
             }
 
-            ServerSocket serverSocket = new ServerSocket(port);
+            serverSocket = new ServerSocket(port);
             serverSocket.setPerformancePreferences(0, 1, 2);
             ExecutorService executors = Executors.newFixedThreadPool(numberOfPartitions);
             executors.execute(new PartitionExecutor(viewConfig.getRenderingScheme(), numberOfRequestExecutors, resourcesDirectory, routeAttributes, viewConfig, viewBytesMap, serverSocket, persistenceConfig, viewRenderers, securityAccessKlass));
@@ -94,9 +95,16 @@ public class PLSAR {
             System.out.println("/_/   /_____/____/_/  |_(_)_/ |_|\n\n");
 
             System.out.println("INFO: http://localhost:" + port + "/\n\n");
-//            Log.info("http://localhost:" + port + "/\n\n");
 
         }catch(IOException | NoSuchMethodException | InvocationTargetException | IllegalAccessException | InstantiationException | PlsarException ex){
+            ex.printStackTrace();
+        }
+    }
+
+    public void stop(){
+        try {
+            serverSocket.close();
+        } catch (IOException ex) {
             ex.printStackTrace();
         }
     }

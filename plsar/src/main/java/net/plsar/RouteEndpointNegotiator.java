@@ -174,6 +174,7 @@ public class RouteEndpointNegotiator {
             beforeRouteResolver.setMethodComponents(methodComponents);
             beforeRouteResolver.setRouteEndpointInstanceMethod(routeEndpointInstanceMethod);
             beforeRouteResolver.setRouteEndpointInstances(routeEndpointInstances);
+
             BeforeResult beforeResult = beforeRouteResolver.resolve();
 
             if(beforeResult != null &&
@@ -184,7 +185,6 @@ public class RouteEndpointNegotiator {
                 routeResult.setResponseCode("303");
                 return routeResult;
             }
-            System.out.println(beforeResult);
 
             ArrayList methodParametersArr = addOrderBeforeResult(beforeResult, methodComponents);
             Object[] methodParametersLst = methodParametersArr.toArray();

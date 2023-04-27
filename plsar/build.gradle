@@ -98,7 +98,7 @@ publishing {
                         "instantiated on the fly. PLSA.R runs via one command so there are no .war " +
                         "files to deploy, no additional plugins to install it is a simple yet " +
                         "powerful alternative to container deployment environments. PLSA.R even " +
-                        "boasts a little dependency injection for data logic. www.plsar.net"
+                        "boasts a little dependency injection for a persistence layer. www.plsar.net"
                 url = "http://www.plsar.net"
                 licenses {
                     license {
